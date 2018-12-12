@@ -26,7 +26,6 @@ Partial Class frmMain
         Me.grpStatus = New System.Windows.Forms.GroupBox()
         Me.chkHeartbeat = New System.Windows.Forms.CheckBox()
         Me.btnReadNode = New System.Windows.Forms.Button()
-        Me.btnConnectNode = New System.Windows.Forms.Button()
         Me.lstNodeStatus = New System.Windows.Forms.ListView()
         Me.colID = CType(New System.Windows.Forms.ColumnHeader(), System.Windows.Forms.ColumnHeader)
         Me.colAddr = CType(New System.Windows.Forms.ColumnHeader(), System.Windows.Forms.ColumnHeader)
@@ -98,7 +97,6 @@ Partial Class frmMain
             Or System.Windows.Forms.AnchorStyles.Right), System.Windows.Forms.AnchorStyles)
         Me.grpStatus.Controls.Add(Me.chkHeartbeat)
         Me.grpStatus.Controls.Add(Me.btnReadNode)
-        Me.grpStatus.Controls.Add(Me.btnConnectNode)
         Me.grpStatus.Controls.Add(Me.lstNodeStatus)
         Me.grpStatus.Controls.Add(Me.txtStatusExplain)
         Me.grpStatus.ForeColor = System.Drawing.SystemColors.HighlightText
@@ -114,7 +112,7 @@ Partial Class frmMain
         Me.chkHeartbeat.AutoSize = True
         Me.chkHeartbeat.Checked = True
         Me.chkHeartbeat.CheckState = System.Windows.Forms.CheckState.Checked
-        Me.chkHeartbeat.Location = New System.Drawing.Point(193, 24)
+        Me.chkHeartbeat.Location = New System.Drawing.Point(99, 22)
         Me.chkHeartbeat.Name = "chkHeartbeat"
         Me.chkHeartbeat.Size = New System.Drawing.Size(102, 19)
         Me.chkHeartbeat.TabIndex = 6
@@ -135,21 +133,6 @@ Partial Class frmMain
         Me.btnReadNode.TabIndex = 5
         Me.btnReadNode.Text = "노드 생성"
         Me.btnReadNode.UseVisualStyleBackColor = False
-        '
-        'btnConnectNode
-        '
-        Me.btnConnectNode.BackColor = System.Drawing.SystemColors.ControlDarkDark
-        Me.btnConnectNode.FlatAppearance.BorderColor = System.Drawing.SystemColors.ControlDark
-        Me.btnConnectNode.FlatAppearance.MouseDownBackColor = System.Drawing.Color.FromArgb(CType(CType(192, Byte), Integer), CType(CType(0, Byte), Integer), CType(CType(0, Byte), Integer))
-        Me.btnConnectNode.FlatAppearance.MouseOverBackColor = System.Drawing.Color.Olive
-        Me.btnConnectNode.FlatStyle = System.Windows.Forms.FlatStyle.Flat
-        Me.btnConnectNode.ForeColor = System.Drawing.SystemColors.HighlightText
-        Me.btnConnectNode.Location = New System.Drawing.Point(99, 20)
-        Me.btnConnectNode.Name = "btnConnectNode"
-        Me.btnConnectNode.Size = New System.Drawing.Size(84, 24)
-        Me.btnConnectNode.TabIndex = 4
-        Me.btnConnectNode.Text = "노드 연결"
-        Me.btnConnectNode.UseVisualStyleBackColor = False
         '
         'lstNodeStatus
         '
@@ -692,7 +675,6 @@ Partial Class frmMain
     Friend WithEvents grpCmdExecute As System.Windows.Forms.GroupBox
     Friend WithEvents btnCmdImmdExe As System.Windows.Forms.Button
     Friend WithEvents txtCmdTypeExplain As System.Windows.Forms.Label
-    Friend WithEvents btnConnectNode As System.Windows.Forms.Button
     Friend WithEvents btnReadNode As System.Windows.Forms.Button
     Friend WithEvents btnExit As System.Windows.Forms.Button
     Friend WithEvents txtAlert As System.Windows.Forms.Label
