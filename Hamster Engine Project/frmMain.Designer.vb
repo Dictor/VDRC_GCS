@@ -48,6 +48,13 @@ Partial Class frmMain
         Me.tabMain = New System.Windows.Forms.TabControl()
         Me.tabpRTK = New System.Windows.Forms.TabPage()
         Me.grpRTKData = New System.Windows.Forms.GroupBox()
+        Me.lstData = New System.Windows.Forms.ListView()
+        Me.ColumnHeader1 = CType(New System.Windows.Forms.ColumnHeader(), System.Windows.Forms.ColumnHeader)
+        Me.ColumnHeader2 = CType(New System.Windows.Forms.ColumnHeader(), System.Windows.Forms.ColumnHeader)
+        Me.ColumnHeader3 = CType(New System.Windows.Forms.ColumnHeader(), System.Windows.Forms.ColumnHeader)
+        Me.ColumnHeader4 = CType(New System.Windows.Forms.ColumnHeader(), System.Windows.Forms.ColumnHeader)
+        Me.ColumnHeader5 = CType(New System.Windows.Forms.ColumnHeader(), System.Windows.Forms.ColumnHeader)
+        Me.ColumnHeader6 = CType(New System.Windows.Forms.ColumnHeader(), System.Windows.Forms.ColumnHeader)
         Me.chkDropExceptDefID = New System.Windows.Forms.CheckBox()
         Me.chkShowDefID = New System.Windows.Forms.CheckBox()
         Me.btnListReset = New System.Windows.Forms.Button()
@@ -73,13 +80,6 @@ Partial Class frmMain
         Me.colRealLength = CType(New System.Windows.Forms.ColumnHeader(), System.Windows.Forms.ColumnHeader)
         Me.colCRC = CType(New System.Windows.Forms.ColumnHeader(), System.Windows.Forms.ColumnHeader)
         Me.colExplain = CType(New System.Windows.Forms.ColumnHeader(), System.Windows.Forms.ColumnHeader)
-        Me.lstData = New System.Windows.Forms.ListView()
-        Me.ColumnHeader1 = CType(New System.Windows.Forms.ColumnHeader(), System.Windows.Forms.ColumnHeader)
-        Me.ColumnHeader2 = CType(New System.Windows.Forms.ColumnHeader(), System.Windows.Forms.ColumnHeader)
-        Me.ColumnHeader3 = CType(New System.Windows.Forms.ColumnHeader(), System.Windows.Forms.ColumnHeader)
-        Me.ColumnHeader4 = CType(New System.Windows.Forms.ColumnHeader(), System.Windows.Forms.ColumnHeader)
-        Me.ColumnHeader5 = CType(New System.Windows.Forms.ColumnHeader(), System.Windows.Forms.ColumnHeader)
-        Me.ColumnHeader6 = CType(New System.Windows.Forms.ColumnHeader(), System.Windows.Forms.ColumnHeader)
         Me.grpStatus.SuspendLayout()
         Me.tabpCommand.SuspendLayout()
         Me.grpCmdExecute.SuspendLayout()
@@ -159,6 +159,7 @@ Partial Class frmMain
         Me.lstNodeStatus.BackColor = System.Drawing.SystemColors.ControlText
         Me.lstNodeStatus.Columns.AddRange(New System.Windows.Forms.ColumnHeader() {Me.colID, Me.colAddr, Me.colPort, Me.colStatus})
         Me.lstNodeStatus.ForeColor = System.Drawing.SystemColors.HighlightText
+        Me.lstNodeStatus.FullRowSelect = True
         Me.lstNodeStatus.HeaderStyle = System.Windows.Forms.ColumnHeaderStyle.Nonclickable
         Me.lstNodeStatus.HideSelection = False
         Me.lstNodeStatus.Location = New System.Drawing.Point(8, 72)
@@ -372,10 +373,54 @@ Partial Class frmMain
         Me.grpRTKData.ForeColor = System.Drawing.SystemColors.HighlightText
         Me.grpRTKData.Location = New System.Drawing.Point(6, 133)
         Me.grpRTKData.Name = "grpRTKData"
-        Me.grpRTKData.Size = New System.Drawing.Size(765, 390)
+        Me.grpRTKData.Size = New System.Drawing.Size(765, 388)
         Me.grpRTKData.TabIndex = 11
         Me.grpRTKData.TabStop = False
         Me.grpRTKData.Text = "Data"
+        '
+        'lstData
+        '
+        Me.lstData.Anchor = CType((((System.Windows.Forms.AnchorStyles.Top Or System.Windows.Forms.AnchorStyles.Bottom) _
+            Or System.Windows.Forms.AnchorStyles.Left) _
+            Or System.Windows.Forms.AnchorStyles.Right), System.Windows.Forms.AnchorStyles)
+        Me.lstData.BackColor = System.Drawing.SystemColors.ControlText
+        Me.lstData.Columns.AddRange(New System.Windows.Forms.ColumnHeader() {Me.ColumnHeader1, Me.ColumnHeader2, Me.ColumnHeader3, Me.ColumnHeader4, Me.ColumnHeader5, Me.ColumnHeader6})
+        Me.lstData.ForeColor = System.Drawing.SystemColors.HighlightText
+        Me.lstData.Location = New System.Drawing.Point(9, 45)
+        Me.lstData.Name = "lstData"
+        Me.lstData.Size = New System.Drawing.Size(750, 335)
+        Me.lstData.TabIndex = 8
+        Me.lstData.UseCompatibleStateImageBehavior = False
+        Me.lstData.View = System.Windows.Forms.View.Details
+        '
+        'ColumnHeader1
+        '
+        Me.ColumnHeader1.Text = "ID"
+        '
+        'ColumnHeader2
+        '
+        Me.ColumnHeader2.Text = "시간"
+        Me.ColumnHeader2.Width = 80
+        '
+        'ColumnHeader3
+        '
+        Me.ColumnHeader3.Text = "길이"
+        Me.ColumnHeader3.Width = 50
+        '
+        'ColumnHeader4
+        '
+        Me.ColumnHeader4.Text = "실제길이"
+        Me.ColumnHeader4.Width = 70
+        '
+        'ColumnHeader5
+        '
+        Me.ColumnHeader5.Text = "CRC"
+        Me.ColumnHeader5.Width = 100
+        '
+        'ColumnHeader6
+        '
+        Me.ColumnHeader6.Text = "메세지 설명"
+        Me.ColumnHeader6.Width = 450
         '
         'chkDropExceptDefID
         '
@@ -529,7 +574,7 @@ Partial Class frmMain
         Me.lstConsole.ForeColor = System.Drawing.SystemColors.HighlightText
         Me.lstConsole.Location = New System.Drawing.Point(6, 6)
         Me.lstConsole.Name = "lstConsole"
-        Me.lstConsole.Size = New System.Drawing.Size(765, 519)
+        Me.lstConsole.Size = New System.Drawing.Size(765, 517)
         Me.lstConsole.TabIndex = 0
         Me.lstConsole.UseCompatibleStateImageBehavior = False
         Me.lstConsole.View = System.Windows.Forms.View.Details
@@ -542,6 +587,7 @@ Partial Class frmMain
         'colType
         '
         Me.colType.Text = "메세지 종류"
+        Me.colType.TextAlign = System.Windows.Forms.HorizontalAlignment.Center
         Me.colType.Width = 80
         '
         'colMsg
@@ -585,50 +631,6 @@ Partial Class frmMain
         '
         Me.timAlert.Enabled = True
         Me.timAlert.Interval = 850
-        '
-        'lstData
-        '
-        Me.lstData.Anchor = CType((((System.Windows.Forms.AnchorStyles.Top Or System.Windows.Forms.AnchorStyles.Bottom) _
-            Or System.Windows.Forms.AnchorStyles.Left) _
-            Or System.Windows.Forms.AnchorStyles.Right), System.Windows.Forms.AnchorStyles)
-        Me.lstData.BackColor = System.Drawing.SystemColors.ControlText
-        Me.lstData.Columns.AddRange(New System.Windows.Forms.ColumnHeader() {Me.ColumnHeader1, Me.ColumnHeader2, Me.ColumnHeader3, Me.ColumnHeader4, Me.ColumnHeader5, Me.ColumnHeader6})
-        Me.lstData.ForeColor = System.Drawing.SystemColors.HighlightText
-        Me.lstData.Location = New System.Drawing.Point(9, 45)
-        Me.lstData.Name = "lstData"
-        Me.lstData.Size = New System.Drawing.Size(750, 337)
-        Me.lstData.TabIndex = 8
-        Me.lstData.UseCompatibleStateImageBehavior = False
-        Me.lstData.View = System.Windows.Forms.View.Details
-        '
-        'ColumnHeader1
-        '
-        Me.ColumnHeader1.Text = "ID"
-        '
-        'ColumnHeader2
-        '
-        Me.ColumnHeader2.Text = "시간"
-        Me.ColumnHeader2.Width = 80
-        '
-        'ColumnHeader3
-        '
-        Me.ColumnHeader3.Text = "길이"
-        Me.ColumnHeader3.Width = 50
-        '
-        'ColumnHeader4
-        '
-        Me.ColumnHeader4.Text = "실제길이"
-        Me.ColumnHeader4.Width = 70
-        '
-        'ColumnHeader5
-        '
-        Me.ColumnHeader5.Text = "CRC"
-        Me.ColumnHeader5.Width = 100
-        '
-        'ColumnHeader6
-        '
-        Me.ColumnHeader6.Text = "메세지 설명"
-        Me.ColumnHeader6.Width = 450
         '
         'frmMain
         '
