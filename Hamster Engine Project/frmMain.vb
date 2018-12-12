@@ -98,7 +98,7 @@ Public Class frmMain
                             nowrow.ForeColor = Color.LightGreen
                         Else
                             nowrow.SubItems(3).Text = "FAIL"
-                            nowrow.ForeColor = Color.MediumVioletRed
+                            nowrow.ForeColor = Color.Red
                             PrintConsole(ConsoleMessageType.Alert, "하트비트 수신 실패 (" & nowrow.SubItems(0).Text & "번 노드)")
                         End If
                     Catch ex As Exception
@@ -106,7 +106,7 @@ Public Class frmMain
                         nowrow.ForeColor = Color.LightYellow
                         PrintConsole(ConsoleMessageType.Critical, nowrow.SubItems(0).Text & "번 노드 하트비트 스크립트 실행중 오류 → " & ex.Message)
                     Finally
-                        Threading.Thread.Sleep(500)
+                        Threading.Thread.Sleep(300)
                     End Try
                 Next
             End If
