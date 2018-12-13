@@ -1,7 +1,7 @@
 ﻿Imports Hamster_Engine_Project.HE_Common_Component
 
 Public Class Project
-    Public Shared Version As New HamsterVersion("VDRC GCS", 0, 0, 181213, 19)
+    Public Shared Version As New HamsterVersion("VDRC GCS", 0, 0, 181213, 21)
     Private Shared LoadObject_PROJ_Info As New Dictionary(Of String, Object()) '("개체 전체 이름", {"어셈블리 경로"})
     Public Shared mainFrm As New frmMain
 

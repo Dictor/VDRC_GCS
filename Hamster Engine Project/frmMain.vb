@@ -97,12 +97,14 @@ Public Class frmMain
             If chkHeartbeat.Checked Then
                 For Each nowrow As ListViewItem In lstNodeStatus.Items
                     Try
+                        nowrow.BackColor = Color.Black
+                        nowrow.ForeColor = Color.White
                         Dim nowseq = Integer.Parse(nowrow.SubItems(0).Text)
                         Dim heartres = CallFunction("getHeartbeat", nowseq).result
                         If heartres Then
                             nowrow.SubItems(3).Text = "OK"
                             nowrow.ForeColor = Color.LightGreen
-                            heartbeatFailCount(nowseq) += 0
+                            heartbeatFailCount(nowseq) = 0
                         Else
                             nowrow.ForeColor = Color.Red
                             heartbeatFailCount(nowseq) += 1
@@ -120,7 +122,7 @@ Public Class frmMain
                         nowrow.ForeColor = Color.LightYellow
                         PrintConsole(ConsoleMessageType.Critical, nowrow.SubItems(0).Text & "번 노드 하트비트 스크립트 실행중 오류 → " & ex.Message)
                     Finally
-                        Threading.Thread.Sleep(500)
+                        Threading.Thread.Sleep(5000 / lstNodeStatus.Items.Count)
                     End Try
                 Next
             End If
