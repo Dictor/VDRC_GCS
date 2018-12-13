@@ -33,6 +33,7 @@ Public Class frmMain
         For Each nownode In noderes
             Dim nowdata = CallFunction("getNodeData", nownode).result
             lstNodeStatus.Items.Add(New ListViewItem({nownode, nowdata(0), nowdata(1), "초기화"}))
+            heartbeatFailCount.Add(nownode, 0)
         Next
         PrintConsole(ConsoleMessageType.Info, "노드 정보 얻어오기 완료")
 
@@ -69,11 +70,14 @@ Public Class frmMain
     End Sub
 
     Private typeToString = {"DEBUG", "INFO", "WARNING", "CRITICAL", "ALERT"}
-    Private typeToColor = {Color.LightGray, Color.White, Color.Yellow, Color.MediumPurple, Color.Red}
+    Private typeToColor = {Color.LightGray, Color.White, Color.Yellow, Color.MediumPurple, Color.White}
     Public Sub PrintConsole(type As ConsoleMessageType, msg As String)
         If type = ConsoleMessageType.Alert Then isAlertSituation = True
         Dim nowRow = New ListViewItem({Now.ToString("HH:mm:ss"), typeToString(type), msg})
         nowRow.ForeColor = typeToColor(type)
+        If type = ConsoleMessageType.Alert Then
+            nowRow.BackColor = Color.DarkRed
+        End If
         lstConsole.Items.Add(nowRow)
         lstConsole.EnsureVisible(lstConsole.Items.Count - 1)
     End Sub
@@ -86,6 +90,8 @@ Public Class frmMain
         Alert = 4
     End Enum
 
+    Private heartbeatFailCount As Dictionary(Of Integer, Integer)
+    Private Const heartbeatFailLimit As Integer = 3
     Private Sub CheckHeartbeat()
         Do While True
             If chkHeartbeat.Checked Then
@@ -96,17 +102,22 @@ Public Class frmMain
                         If heartres Then
                             nowrow.SubItems(3).Text = "OK"
                             nowrow.ForeColor = Color.LightGreen
+                            heartbeatFailCount(nowseq) += 0
                         Else
                             nowrow.SubItems(3).Text = "FAIL"
                             nowrow.ForeColor = Color.Red
-                            PrintConsole(ConsoleMessageType.Alert, "하트비트 수신 실패 (" & nowrow.SubItems(0).Text & "번 노드)")
+                            heartbeatFailCount(nowseq) += 1
+                            PrintConsole(ConsoleMessageType.Critical, "하트비트 수신 실패 (" & nowrow.SubItems(0).Text & "번 노드)")
+                            If heartbeatFailCount(nowseq) > heartbeatFailLimit Then
+                                PrintConsole(ConsoleMessageType.Alert, "하트비트 수신 실패 한도 초과 (" & nowrow.SubItems(0).Text & "번 노드)")
+                            End If
                         End If
                     Catch ex As Exception
                         nowrow.SubItems(3).Text = "ERROR"
                         nowrow.ForeColor = Color.LightYellow
                         PrintConsole(ConsoleMessageType.Critical, nowrow.SubItems(0).Text & "번 노드 하트비트 스크립트 실행중 오류 → " & ex.Message)
                     Finally
-                        Threading.Thread.Sleep(300)
+                        Threading.Thread.Sleep(500)
                     End Try
                 Next
             End If
