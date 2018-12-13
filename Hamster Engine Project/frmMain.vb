@@ -70,7 +70,7 @@ Public Class frmMain
     End Sub
 
     Private typeToString = {"DEBUG", "INFO", "WARNING", "CRITICAL", "ALERT"}
-    Private typeToColor = {Color.LightGray, Color.White, Color.Yellow, Color.MediumPurple, Color.White}
+    Private typeToColor = {Color.LightGray, Color.White, Color.Yellow, Color.Red, Color.White}
     Public Sub PrintConsole(type As ConsoleMessageType, msg As String)
         If type = ConsoleMessageType.Alert Then isAlertSituation = True
         Dim nowRow = New ListViewItem({Now.ToString("HH:mm:ss"), typeToString(type), msg})
@@ -90,7 +90,7 @@ Public Class frmMain
         Alert = 4
     End Enum
 
-    Private heartbeatFailCount As Dictionary(Of Integer, Integer)
+    Private heartbeatFailCount As New Dictionary(Of Integer, Integer)
     Private Const heartbeatFailLimit As Integer = 3
     Private Sub CheckHeartbeat()
         Do While True
@@ -104,12 +104,15 @@ Public Class frmMain
                             nowrow.ForeColor = Color.LightGreen
                             heartbeatFailCount(nowseq) += 0
                         Else
-                            nowrow.SubItems(3).Text = "FAIL"
                             nowrow.ForeColor = Color.Red
                             heartbeatFailCount(nowseq) += 1
-                            PrintConsole(ConsoleMessageType.Critical, "하트비트 수신 실패 (" & nowrow.SubItems(0).Text & "번 노드)")
                             If heartbeatFailCount(nowseq) > heartbeatFailLimit Then
                                 PrintConsole(ConsoleMessageType.Alert, "하트비트 수신 실패 한도 초과 (" & nowrow.SubItems(0).Text & "번 노드)")
+                                nowrow.SubItems(3).Text = "FAIL *"
+                                nowrow.BackColor = Color.DarkRed
+                            Else
+                                PrintConsole(ConsoleMessageType.Critical, "하트비트 수신 실패 (" & nowrow.SubItems(0).Text & "번 노드)")
+                                nowrow.SubItems(3).Text = "FAIL (" & heartbeatFailCount(nowseq).ToString & ")"
                             End If
                         End If
                     Catch ex As Exception
