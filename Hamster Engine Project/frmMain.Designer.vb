@@ -30,6 +30,8 @@ Partial Class frmMain
         Me.colID = CType(New System.Windows.Forms.ColumnHeader(), System.Windows.Forms.ColumnHeader)
         Me.colAddr = CType(New System.Windows.Forms.ColumnHeader(), System.Windows.Forms.ColumnHeader)
         Me.colPort = CType(New System.Windows.Forms.ColumnHeader(), System.Windows.Forms.ColumnHeader)
+        Me.colHeartbeat = CType(New System.Windows.Forms.ColumnHeader(), System.Windows.Forms.ColumnHeader)
+        Me.colACK = CType(New System.Windows.Forms.ColumnHeader(), System.Windows.Forms.ColumnHeader)
         Me.colStatus = CType(New System.Windows.Forms.ColumnHeader(), System.Windows.Forms.ColumnHeader)
         Me.txtStatusExplain = New System.Windows.Forms.Label()
         Me.txtProgName = New System.Windows.Forms.Label()
@@ -71,6 +73,13 @@ Partial Class frmMain
         Me.colTime = CType(New System.Windows.Forms.ColumnHeader(), System.Windows.Forms.ColumnHeader)
         Me.colType = CType(New System.Windows.Forms.ColumnHeader(), System.Windows.Forms.ColumnHeader)
         Me.colMsg = CType(New System.Windows.Forms.ColumnHeader(), System.Windows.Forms.ColumnHeader)
+        Me.tabPacket = New System.Windows.Forms.TabPage()
+        Me.txtPacketDetail = New System.Windows.Forms.Label()
+        Me.lstPacket = New System.Windows.Forms.ListView()
+        Me.colMsgTime = CType(New System.Windows.Forms.ColumnHeader(), System.Windows.Forms.ColumnHeader)
+        Me.colMsgDir = CType(New System.Windows.Forms.ColumnHeader(), System.Windows.Forms.ColumnHeader)
+        Me.colMsgName = CType(New System.Windows.Forms.ColumnHeader(), System.Windows.Forms.ColumnHeader)
+        Me.colMsgData = CType(New System.Windows.Forms.ColumnHeader(), System.Windows.Forms.ColumnHeader)
         Me.btnExit = New System.Windows.Forms.Button()
         Me.txtAlert = New System.Windows.Forms.Label()
         Me.timAlert = New System.Windows.Forms.Timer(Me.components)
@@ -79,6 +88,7 @@ Partial Class frmMain
         Me.colRealLength = CType(New System.Windows.Forms.ColumnHeader(), System.Windows.Forms.ColumnHeader)
         Me.colCRC = CType(New System.Windows.Forms.ColumnHeader(), System.Windows.Forms.ColumnHeader)
         Me.colExplain = CType(New System.Windows.Forms.ColumnHeader(), System.Windows.Forms.ColumnHeader)
+        Me.timHeartbeat = New System.Windows.Forms.Timer(Me.components)
         Me.grpStatus.SuspendLayout()
         Me.tabpCommand.SuspendLayout()
         Me.grpCmdExecute.SuspendLayout()
@@ -89,6 +99,7 @@ Partial Class frmMain
         Me.grpRTKData.SuspendLayout()
         Me.grpRTKComm.SuspendLayout()
         Me.tabpConsole.SuspendLayout()
+        Me.tabPacket.SuspendLayout()
         Me.SuspendLayout()
         '
         'grpStatus
@@ -100,9 +111,9 @@ Partial Class frmMain
         Me.grpStatus.Controls.Add(Me.lstNodeStatus)
         Me.grpStatus.Controls.Add(Me.txtStatusExplain)
         Me.grpStatus.ForeColor = System.Drawing.SystemColors.HighlightText
-        Me.grpStatus.Location = New System.Drawing.Point(801, 12)
+        Me.grpStatus.Location = New System.Drawing.Point(726, 12)
         Me.grpStatus.Name = "grpStatus"
-        Me.grpStatus.Size = New System.Drawing.Size(343, 613)
+        Me.grpStatus.Size = New System.Drawing.Size(418, 613)
         Me.grpStatus.TabIndex = 0
         Me.grpStatus.TabStop = False
         Me.grpStatus.Text = "노드 상태"
@@ -140,14 +151,14 @@ Partial Class frmMain
             Or System.Windows.Forms.AnchorStyles.Left) _
             Or System.Windows.Forms.AnchorStyles.Right), System.Windows.Forms.AnchorStyles)
         Me.lstNodeStatus.BackColor = System.Drawing.SystemColors.ControlText
-        Me.lstNodeStatus.Columns.AddRange(New System.Windows.Forms.ColumnHeader() {Me.colID, Me.colAddr, Me.colPort, Me.colStatus})
+        Me.lstNodeStatus.Columns.AddRange(New System.Windows.Forms.ColumnHeader() {Me.colID, Me.colAddr, Me.colPort, Me.colHeartbeat, Me.colACK, Me.colStatus})
         Me.lstNodeStatus.ForeColor = System.Drawing.SystemColors.HighlightText
         Me.lstNodeStatus.FullRowSelect = True
         Me.lstNodeStatus.HeaderStyle = System.Windows.Forms.ColumnHeaderStyle.Nonclickable
         Me.lstNodeStatus.HideSelection = False
         Me.lstNodeStatus.Location = New System.Drawing.Point(8, 72)
         Me.lstNodeStatus.Name = "lstNodeStatus"
-        Me.lstNodeStatus.Size = New System.Drawing.Size(328, 531)
+        Me.lstNodeStatus.Size = New System.Drawing.Size(403, 531)
         Me.lstNodeStatus.TabIndex = 1
         Me.lstNodeStatus.UseCompatibleStateImageBehavior = False
         Me.lstNodeStatus.View = System.Windows.Forms.View.Details
@@ -155,16 +166,26 @@ Partial Class frmMain
         'colID
         '
         Me.colID.Text = "ID"
+        Me.colID.Width = 40
         '
         'colAddr
         '
         Me.colAddr.Text = "주소"
-        Me.colAddr.Width = 92
+        Me.colAddr.Width = 68
         '
         'colPort
         '
         Me.colPort.Text = "포트"
         Me.colPort.Width = 50
+        '
+        'colHeartbeat
+        '
+        Me.colHeartbeat.Text = "하트비트"
+        Me.colHeartbeat.Width = 101
+        '
+        'colACK
+        '
+        Me.colACK.Text = "ACK"
         '
         'colStatus
         '
@@ -176,7 +197,7 @@ Partial Class frmMain
             Or System.Windows.Forms.AnchorStyles.Right), System.Windows.Forms.AnchorStyles)
         Me.txtStatusExplain.Location = New System.Drawing.Point(7, 51)
         Me.txtStatusExplain.Name = "txtStatusExplain"
-        Me.txtStatusExplain.Size = New System.Drawing.Size(329, 14)
+        Me.txtStatusExplain.Size = New System.Drawing.Size(404, 14)
         Me.txtStatusExplain.TabIndex = 0
         Me.txtStatusExplain.Text = "Explain"
         '
@@ -207,7 +228,7 @@ Partial Class frmMain
         Me.tabpCommand.Location = New System.Drawing.Point(4, 24)
         Me.tabpCommand.Name = "tabpCommand"
         Me.tabpCommand.Padding = New System.Windows.Forms.Padding(3)
-        Me.tabpCommand.Size = New System.Drawing.Size(777, 533)
+        Me.tabpCommand.Size = New System.Drawing.Size(701, 533)
         Me.tabpCommand.TabIndex = 1
         Me.tabpCommand.Text = "명령"
         '
@@ -219,7 +240,7 @@ Partial Class frmMain
         Me.grpCmdExecute.ForeColor = System.Drawing.SystemColors.HighlightText
         Me.grpCmdExecute.Location = New System.Drawing.Point(6, 121)
         Me.grpCmdExecute.Name = "grpCmdExecute"
-        Me.grpCmdExecute.Size = New System.Drawing.Size(765, 51)
+        Me.grpCmdExecute.Size = New System.Drawing.Size(689, 51)
         Me.grpCmdExecute.TabIndex = 8
         Me.grpCmdExecute.TabStop = False
         Me.grpCmdExecute.Text = "명령 실행"
@@ -248,7 +269,7 @@ Partial Class frmMain
         Me.grpCmdKind.ForeColor = System.Drawing.SystemColors.HighlightText
         Me.grpCmdKind.Location = New System.Drawing.Point(6, 58)
         Me.grpCmdKind.Name = "grpCmdKind"
-        Me.grpCmdKind.Size = New System.Drawing.Size(765, 57)
+        Me.grpCmdKind.Size = New System.Drawing.Size(689, 57)
         Me.grpCmdKind.TabIndex = 7
         Me.grpCmdKind.TabStop = False
         Me.grpCmdKind.Text = "명령 종류"
@@ -259,7 +280,7 @@ Partial Class frmMain
             Or System.Windows.Forms.AnchorStyles.Right), System.Windows.Forms.AnchorStyles)
         Me.txtCmdTypeExplain.Location = New System.Drawing.Point(263, 21)
         Me.txtCmdTypeExplain.Name = "txtCmdTypeExplain"
-        Me.txtCmdTypeExplain.Size = New System.Drawing.Size(488, 20)
+        Me.txtCmdTypeExplain.Size = New System.Drawing.Size(412, 20)
         Me.txtCmdTypeExplain.TabIndex = 1
         Me.txtCmdTypeExplain.TextAlign = System.Drawing.ContentAlignment.MiddleLeft
         '
@@ -282,7 +303,7 @@ Partial Class frmMain
         Me.grpCmdTarget.ForeColor = System.Drawing.SystemColors.HighlightText
         Me.grpCmdTarget.Location = New System.Drawing.Point(6, 6)
         Me.grpCmdTarget.Name = "grpCmdTarget"
-        Me.grpCmdTarget.Size = New System.Drawing.Size(765, 46)
+        Me.grpCmdTarget.Size = New System.Drawing.Size(689, 46)
         Me.grpCmdTarget.TabIndex = 4
         Me.grpCmdTarget.TabStop = False
         Me.grpCmdTarget.Text = "명령 대상"
@@ -292,7 +313,7 @@ Partial Class frmMain
         Me.txtTargetCustom.Anchor = CType((System.Windows.Forms.AnchorStyles.Left Or System.Windows.Forms.AnchorStyles.Right), System.Windows.Forms.AnchorStyles)
         Me.txtTargetCustom.Location = New System.Drawing.Point(187, 15)
         Me.txtTargetCustom.Name = "txtTargetCustom"
-        Me.txtTargetCustom.Size = New System.Drawing.Size(564, 23)
+        Me.txtTargetCustom.Size = New System.Drawing.Size(488, 23)
         Me.txtTargetCustom.TabIndex = 6
         '
         'btnTargetCustom
@@ -325,10 +346,11 @@ Partial Class frmMain
         Me.tabMain.Controls.Add(Me.tabpCommand)
         Me.tabMain.Controls.Add(Me.tabpRTK)
         Me.tabMain.Controls.Add(Me.tabpConsole)
+        Me.tabMain.Controls.Add(Me.tabPacket)
         Me.tabMain.Location = New System.Drawing.Point(11, 63)
         Me.tabMain.Name = "tabMain"
         Me.tabMain.SelectedIndex = 0
-        Me.tabMain.Size = New System.Drawing.Size(785, 561)
+        Me.tabMain.Size = New System.Drawing.Size(709, 561)
         Me.tabMain.TabIndex = 3
         '
         'tabpRTK
@@ -339,7 +361,7 @@ Partial Class frmMain
         Me.tabpRTK.Location = New System.Drawing.Point(4, 24)
         Me.tabpRTK.Name = "tabpRTK"
         Me.tabpRTK.Padding = New System.Windows.Forms.Padding(3)
-        Me.tabpRTK.Size = New System.Drawing.Size(777, 533)
+        Me.tabpRTK.Size = New System.Drawing.Size(701, 533)
         Me.tabpRTK.TabIndex = 2
         Me.tabpRTK.Text = "RTK-GPS"
         '
@@ -356,7 +378,7 @@ Partial Class frmMain
         Me.grpRTKData.ForeColor = System.Drawing.SystemColors.HighlightText
         Me.grpRTKData.Location = New System.Drawing.Point(6, 133)
         Me.grpRTKData.Name = "grpRTKData"
-        Me.grpRTKData.Size = New System.Drawing.Size(765, 388)
+        Me.grpRTKData.Size = New System.Drawing.Size(689, 384)
         Me.grpRTKData.TabIndex = 11
         Me.grpRTKData.TabStop = False
         Me.grpRTKData.Text = "Data"
@@ -371,7 +393,7 @@ Partial Class frmMain
         Me.lstData.ForeColor = System.Drawing.SystemColors.HighlightText
         Me.lstData.Location = New System.Drawing.Point(9, 45)
         Me.lstData.Name = "lstData"
-        Me.lstData.Size = New System.Drawing.Size(750, 335)
+        Me.lstData.Size = New System.Drawing.Size(674, 331)
         Me.lstData.TabIndex = 8
         Me.lstData.UseCompatibleStateImageBehavior = False
         Me.lstData.View = System.Windows.Forms.View.Details
@@ -408,7 +430,7 @@ Partial Class frmMain
         'chkDropExceptDefID
         '
         Me.chkDropExceptDefID.Anchor = CType((System.Windows.Forms.AnchorStyles.Top Or System.Windows.Forms.AnchorStyles.Right), System.Windows.Forms.AnchorStyles)
-        Me.chkDropExceptDefID.Location = New System.Drawing.Point(373, 16)
+        Me.chkDropExceptDefID.Location = New System.Drawing.Point(297, 16)
         Me.chkDropExceptDefID.Name = "chkDropExceptDefID"
         Me.chkDropExceptDefID.Size = New System.Drawing.Size(131, 25)
         Me.chkDropExceptDefID.TabIndex = 18
@@ -418,7 +440,7 @@ Partial Class frmMain
         'chkShowDefID
         '
         Me.chkShowDefID.Anchor = CType((System.Windows.Forms.AnchorStyles.Top Or System.Windows.Forms.AnchorStyles.Right), System.Windows.Forms.AnchorStyles)
-        Me.chkShowDefID.Location = New System.Drawing.Point(510, 15)
+        Me.chkShowDefID.Location = New System.Drawing.Point(434, 15)
         Me.chkShowDefID.Name = "chkShowDefID"
         Me.chkShowDefID.Size = New System.Drawing.Size(131, 25)
         Me.chkShowDefID.TabIndex = 17
@@ -428,7 +450,7 @@ Partial Class frmMain
         'btnListReset
         '
         Me.btnListReset.Anchor = CType((System.Windows.Forms.AnchorStyles.Top Or System.Windows.Forms.AnchorStyles.Right), System.Windows.Forms.AnchorStyles)
-        Me.btnListReset.Location = New System.Drawing.Point(647, 15)
+        Me.btnListReset.Location = New System.Drawing.Point(571, 15)
         Me.btnListReset.Name = "btnListReset"
         Me.btnListReset.Size = New System.Drawing.Size(112, 25)
         Me.btnListReset.TabIndex = 16
@@ -457,7 +479,7 @@ Partial Class frmMain
         Me.grpRTKComm.ForeColor = System.Drawing.SystemColors.HighlightText
         Me.grpRTKComm.Location = New System.Drawing.Point(6, 6)
         Me.grpRTKComm.Name = "grpRTKComm"
-        Me.grpRTKComm.Size = New System.Drawing.Size(765, 121)
+        Me.grpRTKComm.Size = New System.Drawing.Size(689, 121)
         Me.grpRTKComm.TabIndex = 3
         Me.grpRTKComm.TabStop = False
         Me.grpRTKComm.Text = "Communication"
@@ -533,17 +555,17 @@ Partial Class frmMain
         Me.lstRawSerial.Location = New System.Drawing.Point(148, 17)
         Me.lstRawSerial.Margin = New System.Windows.Forms.Padding(2)
         Me.lstRawSerial.Name = "lstRawSerial"
-        Me.lstRawSerial.Size = New System.Drawing.Size(611, 95)
+        Me.lstRawSerial.Size = New System.Drawing.Size(535, 95)
         Me.lstRawSerial.TabIndex = 1
         '
         'tabpConsole
         '
         Me.tabpConsole.BackColor = System.Drawing.SystemColors.ControlText
         Me.tabpConsole.Controls.Add(Me.lstConsole)
-        Me.tabpConsole.Location = New System.Drawing.Point(4, 24)
+        Me.tabpConsole.Location = New System.Drawing.Point(4, 22)
         Me.tabpConsole.Name = "tabpConsole"
         Me.tabpConsole.Padding = New System.Windows.Forms.Padding(3)
-        Me.tabpConsole.Size = New System.Drawing.Size(777, 533)
+        Me.tabpConsole.Size = New System.Drawing.Size(701, 535)
         Me.tabpConsole.TabIndex = 4
         Me.tabpConsole.Text = "콘솔"
         '
@@ -557,7 +579,7 @@ Partial Class frmMain
         Me.lstConsole.ForeColor = System.Drawing.SystemColors.HighlightText
         Me.lstConsole.Location = New System.Drawing.Point(6, 6)
         Me.lstConsole.Name = "lstConsole"
-        Me.lstConsole.Size = New System.Drawing.Size(765, 517)
+        Me.lstConsole.Size = New System.Drawing.Size(689, 513)
         Me.lstConsole.TabIndex = 0
         Me.lstConsole.UseCompatibleStateImageBehavior = False
         Me.lstConsole.View = System.Windows.Forms.View.Details
@@ -578,6 +600,67 @@ Partial Class frmMain
         Me.colMsg.Text = "메세지"
         Me.colMsg.Width = 550
         '
+        'tabPacket
+        '
+        Me.tabPacket.BackColor = System.Drawing.SystemColors.ControlText
+        Me.tabPacket.Controls.Add(Me.txtPacketDetail)
+        Me.tabPacket.Controls.Add(Me.lstPacket)
+        Me.tabPacket.Location = New System.Drawing.Point(4, 22)
+        Me.tabPacket.Name = "tabPacket"
+        Me.tabPacket.Padding = New System.Windows.Forms.Padding(3)
+        Me.tabPacket.Size = New System.Drawing.Size(701, 535)
+        Me.tabPacket.TabIndex = 5
+        Me.tabPacket.Text = "패킷 모니터"
+        '
+        'txtPacketDetail
+        '
+        Me.txtPacketDetail.Anchor = CType(((System.Windows.Forms.AnchorStyles.Bottom Or System.Windows.Forms.AnchorStyles.Left) _
+            Or System.Windows.Forms.AnchorStyles.Right), System.Windows.Forms.AnchorStyles)
+        Me.txtPacketDetail.BackColor = System.Drawing.SystemColors.ControlDarkDark
+        Me.txtPacketDetail.Location = New System.Drawing.Point(6, 432)
+        Me.txtPacketDetail.Name = "txtPacketDetail"
+        Me.txtPacketDetail.Size = New System.Drawing.Size(689, 94)
+        Me.txtPacketDetail.TabIndex = 2
+        Me.txtPacketDetail.Text = "패킷 데이터"
+        '
+        'lstPacket
+        '
+        Me.lstPacket.Anchor = CType((((System.Windows.Forms.AnchorStyles.Top Or System.Windows.Forms.AnchorStyles.Bottom) _
+            Or System.Windows.Forms.AnchorStyles.Left) _
+            Or System.Windows.Forms.AnchorStyles.Right), System.Windows.Forms.AnchorStyles)
+        Me.lstPacket.BackColor = System.Drawing.SystemColors.ControlText
+        Me.lstPacket.Columns.AddRange(New System.Windows.Forms.ColumnHeader() {Me.colMsgTime, Me.colMsgDir, Me.colMsgName, Me.colMsgData})
+        Me.lstPacket.ForeColor = System.Drawing.SystemColors.HighlightText
+        Me.lstPacket.FullRowSelect = True
+        Me.lstPacket.Location = New System.Drawing.Point(6, 10)
+        Me.lstPacket.MultiSelect = False
+        Me.lstPacket.Name = "lstPacket"
+        Me.lstPacket.Size = New System.Drawing.Size(689, 419)
+        Me.lstPacket.TabIndex = 1
+        Me.lstPacket.UseCompatibleStateImageBehavior = False
+        Me.lstPacket.View = System.Windows.Forms.View.Details
+        '
+        'colMsgTime
+        '
+        Me.colMsgTime.Text = "시간"
+        Me.colMsgTime.Width = 80
+        '
+        'colMsgDir
+        '
+        Me.colMsgDir.Text = "방향"
+        Me.colMsgDir.TextAlign = System.Windows.Forms.HorizontalAlignment.Center
+        Me.colMsgDir.Width = 50
+        '
+        'colMsgName
+        '
+        Me.colMsgName.Text = "메세지 종류"
+        Me.colMsgName.Width = 93
+        '
+        'colMsgData
+        '
+        Me.colMsgData.Text = "메세지 내용"
+        Me.colMsgData.Width = 454
+        '
         'btnExit
         '
         Me.btnExit.Anchor = CType((System.Windows.Forms.AnchorStyles.Top Or System.Windows.Forms.AnchorStyles.Right), System.Windows.Forms.AnchorStyles)
@@ -588,7 +671,7 @@ Partial Class frmMain
         Me.btnExit.FlatStyle = System.Windows.Forms.FlatStyle.Flat
         Me.btnExit.Font = New System.Drawing.Font("굴림", 9.0!, System.Drawing.FontStyle.Bold, System.Drawing.GraphicsUnit.Point, CType(129, Byte))
         Me.btnExit.ForeColor = System.Drawing.SystemColors.HighlightText
-        Me.btnExit.Location = New System.Drawing.Point(738, 16)
+        Me.btnExit.Location = New System.Drawing.Point(663, 14)
         Me.btnExit.Name = "btnExit"
         Me.btnExit.Size = New System.Drawing.Size(53, 40)
         Me.btnExit.TabIndex = 6
@@ -601,7 +684,7 @@ Partial Class frmMain
         Me.txtAlert.BackColor = System.Drawing.Color.Red
         Me.txtAlert.BorderStyle = System.Windows.Forms.BorderStyle.FixedSingle
         Me.txtAlert.Font = New System.Drawing.Font("맑은 고딕", 15.75!, System.Drawing.FontStyle.Bold, System.Drawing.GraphicsUnit.Point, CType(129, Byte))
-        Me.txtAlert.Location = New System.Drawing.Point(621, 16)
+        Me.txtAlert.Location = New System.Drawing.Point(548, 14)
         Me.txtAlert.Margin = New System.Windows.Forms.Padding(0)
         Me.txtAlert.Name = "txtAlert"
         Me.txtAlert.Size = New System.Drawing.Size(81, 40)
@@ -614,6 +697,11 @@ Partial Class frmMain
         '
         Me.timAlert.Enabled = True
         Me.timAlert.Interval = 850
+        '
+        'timHeartbeat
+        '
+        Me.timHeartbeat.Enabled = True
+        Me.timHeartbeat.Interval = 1000
         '
         'frmMain
         '
@@ -645,6 +733,7 @@ Partial Class frmMain
         Me.grpRTKComm.ResumeLayout(False)
         Me.grpRTKComm.PerformLayout()
         Me.tabpConsole.ResumeLayout(False)
+        Me.tabPacket.ResumeLayout(False)
         Me.ResumeLayout(False)
 
     End Sub
@@ -654,7 +743,7 @@ Partial Class frmMain
     Friend WithEvents colID As System.Windows.Forms.ColumnHeader
     Friend WithEvents colAddr As System.Windows.Forms.ColumnHeader
     Friend WithEvents colPort As System.Windows.Forms.ColumnHeader
-    Friend WithEvents colStatus As System.Windows.Forms.ColumnHeader
+    Friend WithEvents colHeartbeat As System.Windows.Forms.ColumnHeader
     Friend WithEvents txtStatusExplain As System.Windows.Forms.Label
     Friend WithEvents txtProgName As System.Windows.Forms.Label
     Friend WithEvents txtProgVer As System.Windows.Forms.Label
@@ -705,4 +794,14 @@ Partial Class frmMain
     Friend WithEvents ColumnHeader4 As System.Windows.Forms.ColumnHeader
     Friend WithEvents ColumnHeader5 As System.Windows.Forms.ColumnHeader
     Friend WithEvents ColumnHeader6 As System.Windows.Forms.ColumnHeader
+    Friend WithEvents colACK As System.Windows.Forms.ColumnHeader
+    Friend WithEvents tabPacket As System.Windows.Forms.TabPage
+    Friend WithEvents colStatus As System.Windows.Forms.ColumnHeader
+    Friend WithEvents timHeartbeat As System.Windows.Forms.Timer
+    Friend WithEvents lstPacket As System.Windows.Forms.ListView
+    Friend WithEvents colMsgTime As System.Windows.Forms.ColumnHeader
+    Friend WithEvents colMsgDir As System.Windows.Forms.ColumnHeader
+    Friend WithEvents colMsgName As System.Windows.Forms.ColumnHeader
+    Friend WithEvents colMsgData As System.Windows.Forms.ColumnHeader
+    Friend WithEvents txtPacketDetail As System.Windows.Forms.Label
 End Class
