@@ -12,6 +12,7 @@
 
 OUTPUT/**
 !OUTPUT/pythonLibs/pymavlink
+!OUTPUT/script
 
 # Build results
 [Dd]ebug/
