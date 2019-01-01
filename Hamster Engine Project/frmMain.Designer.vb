@@ -89,6 +89,7 @@ Partial Class frmMain
         Me.colCRC = CType(New System.Windows.Forms.ColumnHeader(), System.Windows.Forms.ColumnHeader)
         Me.colExplain = CType(New System.Windows.Forms.ColumnHeader(), System.Windows.Forms.ColumnHeader)
         Me.timHeartbeat = New System.Windows.Forms.Timer(Me.components)
+        Me.timLstUpdate = New System.Windows.Forms.Timer(Me.components)
         Me.grpStatus.SuspendLayout()
         Me.tabpCommand.SuspendLayout()
         Me.grpCmdExecute.SuspendLayout()
@@ -378,7 +379,7 @@ Partial Class frmMain
         Me.grpRTKData.ForeColor = System.Drawing.SystemColors.HighlightText
         Me.grpRTKData.Location = New System.Drawing.Point(6, 133)
         Me.grpRTKData.Name = "grpRTKData"
-        Me.grpRTKData.Size = New System.Drawing.Size(689, 384)
+        Me.grpRTKData.Size = New System.Drawing.Size(689, 382)
         Me.grpRTKData.TabIndex = 11
         Me.grpRTKData.TabStop = False
         Me.grpRTKData.Text = "Data"
@@ -393,7 +394,7 @@ Partial Class frmMain
         Me.lstData.ForeColor = System.Drawing.SystemColors.HighlightText
         Me.lstData.Location = New System.Drawing.Point(9, 45)
         Me.lstData.Name = "lstData"
-        Me.lstData.Size = New System.Drawing.Size(674, 331)
+        Me.lstData.Size = New System.Drawing.Size(674, 329)
         Me.lstData.TabIndex = 8
         Me.lstData.UseCompatibleStateImageBehavior = False
         Me.lstData.View = System.Windows.Forms.View.Details
@@ -703,6 +704,10 @@ Partial Class frmMain
         Me.timHeartbeat.Enabled = True
         Me.timHeartbeat.Interval = 1000
         '
+        'timLstUpdate
+        '
+        Me.timLstUpdate.Interval = 500
+        '
         'frmMain
         '
         Me.AutoScaleMode = System.Windows.Forms.AutoScaleMode.None
@@ -804,4 +809,5 @@ Partial Class frmMain
     Friend WithEvents colMsgName As System.Windows.Forms.ColumnHeader
     Friend WithEvents colMsgData As System.Windows.Forms.ColumnHeader
     Friend WithEvents txtPacketDetail As System.Windows.Forms.Label
+    Friend WithEvents timLstUpdate As System.Windows.Forms.Timer
 End Class

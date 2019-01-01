@@ -2,6 +2,11 @@
 Imports System.Collections.Concurrent
 Imports System.Drawing
 Imports System.Dynamic
+Imports System.IO
+Imports System.IO.Ports
+Imports System.Net
+Imports System.Text
+Imports System.Threading
 Imports System.Windows.Forms
 
 Public Class frmMain
@@ -236,6 +241,362 @@ Public Class frmMain
             txtPacketDetail.Text = lstPacket.SelectedItems(0).SubItems(3).Text
         End If
     End Sub
+
+
+
+#Region "RTK-GPS Tab"
+    Private Serial As New SerialPort
+    Private thSerial As Thread
+    Private thRtkMessage As New Thread(AddressOf ProcessMessage)
+
+    Private bufRawSerial As New Queue(Of Byte)(1024)
+    Private bufEachMessage As New List(Of Byte)
+    Private latestData As New Dictionary(Of String, RTCMMessage)
+
+    Private RTCMexplain As New Dictionary(Of String, String)
+    Private MessageCount As Long = 0
+
+    Private isMavReady As Boolean = False
+    Private mavMessageFlag As Byte
+    Private mavCurrentSeqID As Integer
+    Private mavSystemID As Integer
+    Private mavComponentID As Integer
+    Private UDPSender As New Sockets.UdpClient
+    Private UDPEndpoint As IPEndPoint
+
+    Public Class RTCMMessage
+        Public Data As List(Of Byte)
+        Public FullMessage As Byte()
+        Public Length As UInt32
+        Public CRC24 As UInt32
+        Public ID As UInt32
+        Public IssueTime As Date
+
+        ''' <summary>
+        ''' 새로운 RTCM 메세지 컨테이너를 초기화 합니다
+        ''' </summary>
+        ''' <param name="data">RTCM 메세지에서 헤더를 제외한 데이터 프레임</param>
+        ''' <param name="fullmsg">RTCM 전체 메세지</param>
+        ''' <param name="len">RTCM 메세지에서 헤더를 제외한 데이터 프레임의 길이</param>
+        ''' <param name="crc">RTCM 메세지의 CRC</param>
+        ''' <param name="time">메세지가 수신된 시간</param>
+        Public Sub New(data As List(Of Byte), fullmsg As Byte(), len As Long, crc As Long, time As Date)
+            data = data
+            FullMessage = fullmsg
+            Length = len
+            CRC24 = crc
+            ID = FullMessage(3)
+            ID = ID << 4
+            ID = ID Or ((FullMessage(4) >> 4) And &HF)
+            IssueTime = time
+        End Sub
+    End Class
+
+    Private Sub txtProgName_Load(sender As Object, e As EventArgs) Handles MyBase.Load
+        For Each nowline In Split(File.ReadAllText(Application.StartupPath & "\RTCMexplain.txt"), vbCrLf)
+            Dim pline = Split(nowline, ",")
+            RTCMexplain.Add(pline(0), pline(1))
+        Next
+        lstData.Sorting = SortOrder.Descending
+        lstData.ListViewItemSorter = New ListViewComparer(1, SortOrder.Ascending)
+        Dim s = lstData.ListViewItemSorter()
+
+        Dim dummyrtcm As Byte() = {&HD3, 1, 255, 255, 255}
+        latestData.Add("-1", New RTCMMessage(New List(Of Byte) From {255}, dummyrtcm, 1, 0, Now))
+    End Sub
+
+    Public Class ListViewComparer
+        Implements IComparer
+
+        Public col As Integer
+        Public order As SortOrder
+
+        Public Sub New()
+            col = 0
+            order = SortOrder.Ascending
+        End Sub
+
+        Public Sub New(ByVal column As Integer, ByVal order As SortOrder)
+            col = column
+            Me.order = order
+        End Sub
+
+        Public Function Compare(ByVal x As Object, ByVal y As Object) As Integer Implements IComparer.Compare
+            Dim returnVal As Integer = -1
+            Dim a = Convert.ToDouble((CType(x, ListViewItem)).SubItems(col).Text.Replace("초 전", ""))
+            Dim b = Convert.ToDouble((CType(y, ListViewItem)).SubItems(col).Text.Replace("초 전", ""))
+            If a > b Then
+                Return 1
+            ElseIf a = b Then
+                Return 0
+            Else
+                Return -1
+            End If
+        End Function
+    End Class
+
+    Private Function WaitRTCMMessage() As RTCMMessage
+resetWait:
+        '페이로드 빼고 6바이트 (페이로드가 1바이트인 예)
+        'bit          value                byte
+        '1~8        : 0xD3	            -> 0
+        '9~13       : 0	                -> 1
+        '14~24      : LENGTH = 1        -> 2
+        '25~32      : PAYLOAD(1Byte)    -> 3
+        '33~56      : CRC               -> 4 5 6
+        Dim RTCMcount = 0
+        Dim RTCMlen As UInt16 = 0
+        Dim RTCMcrc As UInt32 = 0
+        Dim RTCMdata As New List(Of Byte)
+        Dim result As RTCMMessage
+        Dim dropbytes As Integer = 0
+        Dim dropbuf As New List(Of Byte)
+
+        Do While True
+            Do Until bufRawSerial.Count > 0 '메세지 수신까지 대기
+            Loop
+            Dim nowbyte = bufRawSerial.Dequeue
+            If RTCMcount = 0 Then
+                If Not nowbyte = &HD3 Then 'RTCM 헤더 수신까지 대기 1
+                    dropbytes += 1
+                    dropbuf.Add(nowbyte)
+                    Continue Do
+                Else
+                    If Not dropbytes = 0 Then
+                        lstRawSerialPrint("[DROP RTCM]Mavlink 마커 없는 데이터 : " & dropbytes.ToString & "bytes")
+                        EngineWrapper.EngineFunction.EFUNC_LogWrite.DynamicInvoke("[DROP RTCM detail]" & ByteArrayToString(dropbuf.ToArray))
+                    End If
+                End If
+            ElseIf RTCMcount = 1 Then '두번째 세번째 바이트는 메세지 length 2
+                If Not (nowbyte And &HF8) = 0 Then
+                    lstRawSerialPrint("[DROP RTCM]올바르지 않은 Premble 헤더 (0x000000이 아님)")
+                    GoTo resetWait
+                End If
+                RTCMlen = (nowbyte And &H3) << 8
+            ElseIf RTCMcount = 2 Then
+                RTCMlen = RTCMlen Or nowbyte
+            ElseIf RTCMcount <= 2 + RTCMlen Then '3
+                RTCMdata.Add(nowbyte)
+            ElseIf (RTCMcount > 2 + RTCMlen) And (RTCMcount <= (2 + RTCMlen) + 2) Then '4,  5
+                RTCMcrc = RTCMcrc << 8
+                RTCMcrc = RTCMcrc Or nowbyte
+            ElseIf RTCMcount = (2 + RTCMlen) + 3 Then '6
+                RTCMcrc = RTCMcrc << 8
+                RTCMcrc = RTCMcrc Or nowbyte
+                bufEachMessage.Add(nowbyte)
+                result = New RTCMMessage(RTCMdata, bufEachMessage.ToArray, RTCMlen, RTCMcrc, Now)
+                bufEachMessage.Clear()
+                Exit Do
+            End If
+
+            If (RTCMcount = 4) And (chkDropExceptDefID.Checked = True) Then
+                Dim ID As UInt16 = bufEachMessage(3)
+                ID = ID << 4
+                ID = ID Or ((bufEachMessage(4) >> 4) And &HF)
+                If Not RTCMexplain.ContainsKey(ID.ToString) Then
+                    lstRawSerialPrint("[DROP RTCM]정의되지 않은 ID")
+                    GoTo resetWait
+                End If
+            End If
+
+            bufEachMessage.Add(nowbyte)
+            RTCMcount += 1
+        Loop
+        Return result
+    End Function
+
+    Public Shared Function ByteArrayToString(ByVal ba As Byte()) As String
+        Dim hex As StringBuilder = New StringBuilder(ba.Length * 2)
+        For Each b As Byte In ba
+            hex.AppendFormat("{0:x2}", b)
+        Next
+        Return hex.ToString.ToUpper()
+    End Function
+
+    Private Sub ProcessMessage()
+        Dim exmsg, exmsglen As String
+        Do While True
+            Try
+                Dim r = WaitRTCMMessage()
+                If latestData.ContainsKey(r.ID) Then
+                    latestData(r.ID) = r
+                Else
+                    latestData.Add(r.ID, r)
+                End If
+                If RTCMexplain.ContainsKey(r.ID) Then
+                    If isMavReady Then
+                        MavSendRTCM(r)
+                    End If
+                End If
+                'lstRawSerialPrint(ByteArrayToString(r.FullMessage))
+                EngineWrapper.EngineFunction.EFUNC_LogWrite.DynamicInvoke("수신한 메세지 HEX : " & ByteArrayToString(r.FullMessage))
+                MessageCount += 1
+                txtKeywordCount.Text = "수신한 메세지 개수 : " & MessageCount & "   키워드 개수 : " & latestData.Count
+            Catch ex As ThreadAbortException
+            Catch ex As Exception
+                EngineWrapper.EngineFunction.EFUNC_ShowErrorMsg.DynamicInvoke("PROCESS_MESSAGE_ERROR", "메서지를 처리하는데 실패했습니다! 메세지 내용 : " & exmsg & " (길이 : " & exmsglen & ")", "", "", ex)
+            End Try
+        Loop
+    End Sub
+
+    Private Sub SerialRead()
+        Do While True
+            Try
+                If Not Serial.IsOpen Then
+                    lstRawSerialPrint("[시리얼 포트가 예상치 못하게 닫혔습니다]")
+                    btnDisconnect_Click(Nothing, Nothing)
+                End If
+                Do While Serial.BytesToRead > 0
+                    bufRawSerial.Enqueue(Serial.ReadByte)
+                Loop
+            Catch ex As TimeoutException
+            Catch ex As ThreadAbortException
+            Catch ex As Exception
+                lstRawSerialPrint("[시리얼 포트를 읽는 중 오류가 발생했습니다] → " & ex.Message)
+                btnDisconnect_Click(Nothing, Nothing)
+            End Try
+        Loop
+    End Sub
+
+    Private Sub MavSendRTCM(r As RTCMMessage)
+        Try
+            If r.FullMessage.Count > 180 Then
+                lstRawSerialPrint("[MavLink 분할 UDP 전송 요청] → ID : " & r.ID)
+                Dim flags As Byte = (mavCurrentSeqID << 3) And &HFF
+                Dim fragdata1 As New List(Of Byte)
+                Dim fragdata2 As New List(Of Byte)
+                For i As Integer = 0 To 179
+                    fragdata1.Add(r.FullMessage(i))
+                Next
+                For i As Integer = 180 To r.FullMessage.Count - 1
+                    fragdata2.Add(r.FullMessage(i))
+                Next
+                Dim flags1 As Byte = (mavCurrentSeqID << 3) And &HFF
+                Dim flags2 As Byte = (mavCurrentSeqID << 3) And &HFF
+                flags1 += &H1
+                flags2 += &H3
+                Dim nowmsg1 As New Mavlink.MavlinkDefMessage.GPS_RTCM_DATA(mavCurrentSeqID, mavSystemID, mavComponentID, flags1, fragdata1.Count, fragdata1.ToArray)
+                Dim nowmsg2 As New Mavlink.MavlinkDefMessage.GPS_RTCM_DATA(mavCurrentSeqID, mavSystemID, mavComponentID, flags2, fragdata2.Count, fragdata2.ToArray)
+                EngineWrapper.EngineFunction.EFUNC_LogWrite.DynamicInvoke("[MavLink UDP 메세지 생성 완료]")
+                Dim snowmsg1 = nowmsg1.Serialize()
+                Dim snowmsg2 = nowmsg2.Serialize()
+                EngineWrapper.EngineFunction.EFUNC_LogWrite.DynamicInvoke("[MavLink UDP 메세지 직렬화 완료]")
+                UDPSender.Send(snowmsg1, snowmsg1.Count, UDPEndpoint)
+                UDPSender.Send(snowmsg2, snowmsg2.Count, UDPEndpoint)
+                EngineWrapper.EngineFunction.EFUNC_LogWrite.DynamicInvoke("[MavLink 분할 UDP 메세지 전송]" & vbCrLf & nowmsg1.ToString)
+                EngineWrapper.EngineFunction.EFUNC_LogWrite.DynamicInvoke("[MavLink 분할 UDP 메세지 전송]" & vbCrLf & nowmsg2.ToString)
+            Else
+                lstRawSerialPrint("[MavLink UDP 전송 요청] → ID : " & r.ID)
+                Dim flags As Byte = (mavCurrentSeqID << 3) And &HFF
+                lstRawSerialPrint("[MavLink UDP 전송 요청] → FLAG : " & flags)
+                Dim nowmsg As New Mavlink.MavlinkDefMessage.GPS_RTCM_DATA(mavCurrentSeqID, mavSystemID, mavComponentID, flags, r.FullMessage.Count, r.FullMessage)
+                EngineWrapper.EngineFunction.EFUNC_LogWrite.DynamicInvoke("[MavLink UDP 메세지 생성 완료]")
+                Dim snowmsg = nowmsg.Serialize()
+                EngineWrapper.EngineFunction.EFUNC_LogWrite.DynamicInvoke("[MavLink UDP 메세지 직렬화 완료]")
+                UDPSender.Send(snowmsg, snowmsg.Count, UDPEndpoint)
+                EngineWrapper.EngineFunction.EFUNC_LogWrite.DynamicInvoke("[MavLink UDP 메세지 전송]" & vbCrLf & nowmsg.ToString)
+            End If
+            If mavComponentID >= Byte.MaxValue Then
+                mavCurrentSeqID = 0
+            Else
+                mavCurrentSeqID += 1
+            End If
+        Catch ex As OverflowException
+            lstRawSerialPrint("[MavLink 전송 실패] → " & ex.GetType.FullName)
+            mavCurrentSeqID = 0
+        Catch ex As Mavlink.MavlinkException.MavlinkPayloadTooLargeException
+            lstRawSerialPrint("[MavLink 전송 실패] → " & ex.GetType.FullName)
+        Catch ex As Exception
+            lstRawSerialPrint("[MavLink 전송 실패] → " & ex.GetType.FullName)
+            EngineWrapper.EngineFunction.EFUNC_ShowErrorMsg.DynamicInvoke("MAVLINK_SEND_ERROR", "MAVLINK 메세지를 전송하는데 실패했습니다!", "", "", ex)
+        End Try
+    End Sub
+
+    Private Sub timLstUpdate_Tick(sender As Object, e As EventArgs) Handles timLstUpdate.Tick
+        Try
+            lstData.Items.Clear()
+            Dim displaylst As New Dictionary(Of String, RTCMMessage)(latestData)
+            For Each nowele In displaylst
+                Dim timediff As TimeSpan = Now - nowele.Value.IssueTime
+                Dim lst As ListViewItem
+                If chkShowDefID.Checked Then
+                    If RTCMexplain.ContainsKey(nowele.Value.ID) Then
+                        lst = New ListViewItem({nowele.Value.ID, Math.Round(timediff.TotalSeconds, 1) & "초 전", nowele.Value.Length, nowele.Value.FullMessage.Count, nowele.Value.CRC24.ToString("x6"), RTCMIDtoExplain(nowele.Value.ID)})
+                        lstData.Items.Add(lst)
+                    End If
+                Else
+                    lst = New ListViewItem({nowele.Value.ID, Math.Round(timediff.TotalSeconds, 1) & "초 전", nowele.Value.Length, nowele.Value.FullMessage.Count, nowele.Value.CRC24.ToString("x6"), RTCMIDtoExplain(nowele.Value.ID)})
+                    lstData.Items.Add(lst)
+                End If
+            Next
+            lstData.Sort()
+        Catch ex As Exception
+            EngineWrapper.EngineFunction.EFUNC_ShowErrorMsg.DynamicInvoke("MESSAGE_DISPLAY_ERROR", "메세지를 표출하는 중 오류가 발생했습니다", "", "", ex)
+        End Try
+    End Sub
+
+    Private Sub btnConnect_Click(sender As Object, e As EventArgs) Handles btnConnect.Click
+        Try
+            If txtComPort.Text = "" Or txtBaud.Text = "" Then
+                Exit Sub
+            End If
+            btnConnect.Enabled = False
+            btnDisconnect.Enabled = True
+
+            Serial.PortName = txtComPort.Text
+            Serial.BaudRate = txtBaud.Text
+            lstRawSerialPrint("[시리얼 포트 열기] → " & Serial.PortName & ", " & Serial.BaudRate)
+            Serial.Open()
+            thSerial = New Thread(AddressOf SerialRead)
+            thSerial.Start()
+            thMessage = New Thread(AddressOf ProcessMessage)
+            thMessage.Start()
+            timLstUpdate.Enabled = True
+
+            txtBaud.Enabled = False
+            txtComPort.Enabled = False
+            lstRawSerialPrint("[시리얼 포트 열기 성공]")
+            latestData.Clear()
+        Catch ex As Exception
+            lstRawSerialPrint("[시리얼 포트 열기 실패] → " & ex.Message)
+            EngineWrapper.EngineFunction.EFUNC_ShowErrorMsg.DynamicInvoke("COMPORT_OPEN_ERROR", "시리얼 포트를 여는데 실패했습니다!", "", "", ex)
+            btnDisconnect_Click(Nothing, Nothing)
+        End Try
+    End Sub
+
+    Private Sub btnDisconnect_Click(sender As Object, e As EventArgs) Handles btnDisconnect.Click
+        Try
+            thSerial.Abort()
+            thRtkMessage.Abort()
+            Serial.Close()
+        Catch
+        End Try
+        timLstUpdate.Enabled = False
+        btnConnect.Enabled = True
+        btnDisconnect.Enabled = False
+        txtBaud.Enabled = True
+        txtComPort.Enabled = True
+        lstRawSerialPrint("[시리얼 포트 닫기 성공]")
+    End Sub
+
+    Private Function RTCMIDtoExplain(id As String) As String
+        If RTCMexplain.ContainsKey(id) Then
+            Return RTCMexplain(id)
+        Else
+            Return ""
+        End If
+    End Function
+
+    Private Sub lstRawSerialPrint(msg As String)
+        lstRawSerial.Items.Add(msg)
+        lstRawSerial.SelectedIndex = lstRawSerial.Items.Count - 1
+        EngineWrapper.EngineFunction.EFUNC_LogWrite.DynamicInvoke(msg)
+    End Sub
+
+    Private Sub btnListReset_Click(sender As Object, e As EventArgs) Handles btnListReset.Click
+        latestData.Clear()
+    End Sub
+#End Region
 
     Private Class MavlinkMessage
         Public Sub New(seq As Integer, mname As String, mdata As IronPython.Runtime.List)
