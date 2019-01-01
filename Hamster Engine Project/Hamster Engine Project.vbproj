@@ -45,12 +45,15 @@
   <ItemGroup>
     <Reference Include="IronPython">
       <HintPath>..\OUTPUT\library\IronPython.dll</HintPath>
+      <Private>False</Private>
     </Reference>
     <Reference Include="IronPython.Modules">
       <HintPath>..\OUTPUT\library\IronPython.Modules.dll</HintPath>
+      <Private>False</Private>
     </Reference>
     <Reference Include="Microsoft.Scripting">
       <HintPath>..\OUTPUT\library\Microsoft.Scripting.dll</HintPath>
+      <Private>False</Private>
     </Reference>
     <Reference Include="System" />
     <Reference Include="System.Data" />
