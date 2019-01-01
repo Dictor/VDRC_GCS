@@ -11,7 +11,7 @@ Module PythonAdapter
         commonScope = commonEngine.CreateScope()
         commonOperation = commonEngine.Operations
         Dim libpath = commonEngine.GetSearchPaths()
-        libpath.Add(Engine.ApplicationStartupPath & "\pythonLibs")
+        libpath.Add(EngineWrapper.EngineArgument.ApplicationStartupPath & "\pythonLibs")
         commonEngine.SetSearchPaths(libpath)
     End Sub
 
