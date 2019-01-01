@@ -82,6 +82,7 @@
       <SubType>Form</SubType>
     </Compile>
     <Compile Include="HE_Common_Component.vb" />
+    <Compile Include="Mavlink2.vb" />
     <Compile Include="Projcetcore.vb" />
     <Compile Include="My Project\AssemblyInfo.vb" />
     <Compile Include="My Project\Application.Designer.vb">
